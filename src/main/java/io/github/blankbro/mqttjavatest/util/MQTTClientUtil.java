@@ -71,7 +71,7 @@ public class MQTTClientUtil {
         IMqttDeliveryToken deliveryToken = null;
         for (; retryCount > 0; retryCount--) {
             try {
-                // 开始发布消息
+                // 开始发布消息，messageId 由 sdk 帮我们分配
                 deliveryToken = mqttAsyncClient.publish(topic, mqttMessage);
                 // 等待整个链路的完成, 等待时间为 3000ms
                 deliveryToken.waitForCompletion(3000);
@@ -84,12 +84,13 @@ public class MQTTClientUtil {
                 }
                 // 如果是最后一次重试
                 if (retryCount == 1) {
-                    // 移除消息, 释放messageId
+                    // 不再重试了, 移除消息, 释放messageId
                     mqttAsyncClient.removeMessage(deliveryToken);
                     throw new RuntimeException("重试3次仍未发送成功");
                 }
+                // 走到这说明要开始重试了，重试必须保证 messageId 一样，此处我们不需要做任何操作
             }
         }
-
     }
+
 }
